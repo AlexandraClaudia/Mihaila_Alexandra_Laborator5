@@ -35,6 +35,8 @@ namespace Mihaila_Alexandra_Laborator5
         ActionState action = ActionState.Nothing;
         AutoLotEntitiesModel ctx = new AutoLotEntitiesModel();
         CollectionViewSource customerVSource;
+        CollectionViewSource inventoryVSource;
+        
 
         CollectionViewSource customerOrdersVSource;
         public MainWindow()
@@ -157,6 +159,56 @@ namespace Mihaila_Alexandra_Laborator5
             customerVSource.View.MoveCurrentToNext();
         }
 
+        private void SaveInventory()
+        {
+            Inventory inventory = null;
+            if (action == ActionState.New)
+            {
+                try
+                {
+                    inventory = new Inventory()
+                    {
+                        Color = colorTextBox.Text.Trim(),
+                        Make = makeTextBox.Text.Trim()
+                    };
+                    ctx.Inventories.Add(inventory);
+                    inventoryVSource.View.Refresh();
+                    ctx.SaveChanges();
+                }
+                catch (DataMisalignedException ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+            else if (action == ActionState.Edit)
+            {
+                try
+                {
+                    inventory = (Inventory)inventoryDataGrid.SelectedItem;
+                    inventory.Color = colorTextBox.Text.Trim();
+                    inventory.Make = makeTextBox.Text.Trim();
+                    ctx.SaveChanges();
+                }
+                catch (DataMisalignedException ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+            else if (action == ActionState.Delete)
+            {
+                try
+                {
+                    inventory = (Inventory)inventoryDataGrid.SelectedItem;
+                    ctx.Inventories.Remove(inventory);
+                    ctx.SaveChanges();
+                }
+                catch (DataMisalignedException ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                inventoryVSource.View.Refresh();
+            }
+        }
         private void gbOperations_Click(object sender, RoutedEventArgs e)
         {
             Button SelectedButton = (Button)e.OriginalSource;
@@ -191,7 +243,6 @@ namespace Mihaila_Alexandra_Laborator5
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             TabItem ti = tabControl.SelectedItem as TabItem;
-
             switch (ti.Header)
             {
                 case "Customers":
@@ -266,9 +317,10 @@ namespace Mihaila_Alexandra_Laborator5
 
                     int curr_id = selectedOrder.OrderId;
                     var deleteOrder = ctx.Orders.FirstOrDefault(s => s.OrderId == curr_id);
-                    if(deletedOrder != null)
+                    object deletedOrder = null;
+                    if (deletedOrder != null)
                     {
-                        ctx.Orders.Remove(deletedOrder);
+                        ctx.Orders.Remove((Order)deletedOrder);
                         ctx.SaveChanges();
                         MessageBox.Show("Order Deleted Successfully", "Message");
                         BindDataGrid();
